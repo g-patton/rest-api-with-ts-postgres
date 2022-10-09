@@ -1,3 +1,4 @@
+import { argv } from 'process';
 import { Entity, Column, Index } from 'typeorm';
 import Model from './model.entity';
 
@@ -41,4 +42,8 @@ export class User extends Model {
     return { ...this, password: undefined, verified: undefined };
   }
 }
+
+// used users as name of user table by passing user as an arg.
+// no two users should have same email address
+// @index('email_index') tells Postgres to assign index to email column
 
