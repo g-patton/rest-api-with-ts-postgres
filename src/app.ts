@@ -11,6 +11,12 @@ import userRouter from './routes/user.routes';
 import validateEnv from './utils/validateEnv';
 import redisClient from './utils/connectRedis';
 
+// import nodemailer from 'nodemailer';
+// (async function () {
+//   const credentials = await nodemailer.createTestAccount();
+//   console.log(credentials);
+// })();
+
 AppDataSource.initialize()
   .then(async () => {
     // VALIDATE ENV
@@ -19,6 +25,8 @@ AppDataSource.initialize()
     const app = express();
 
     // TEMPLATE ENGINE
+    app.set('view engine', 'pug');
+    app.set('views', `${__dirname}/views`);
 
     // MIDDLEWARE
 
@@ -76,5 +84,4 @@ AppDataSource.initialize()
 
     console.log(`Server started on port: ${port}`);
   })
-  .catch((error) => console.log(error));
-
+  .catch((error) => {});
