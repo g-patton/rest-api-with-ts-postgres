@@ -7,4 +7,4 @@ Steps to run this project:
 3. Run `docker-compose up -d`
 4. Run `npm start` command
 
-Use `https://www.base64encode.org/` to generate base64 keys for public and private tokens
+Use `https://www.base64encode.org/` to generate base64 keys for public and private tokens. keep them in files covered by .gitignore
