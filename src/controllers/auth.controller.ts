@@ -11,6 +11,7 @@ import AppError from '../utils/appError';
 import redisClient from '../utils/connectRedis';
 import { signJwt, verifyJwt } from '../utils/jwt';
 import { User } from '../entities/user.entity';
+import Email from '../utils/email';
 
 const cookiesOptions: CookieOptions = {
     httpOnly: true,
@@ -37,35 +38,55 @@ const refreshTokenCookieOptions: CookieOptions = {
   
   
 export const registerUserHandler = async (
-    req: Request<{}, {}, CreateUserInput>,
-    res: Response,
-    next: NextFunction
-  ) => {
+  req: Request<{}, {}, CreateUserInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name, password, email } = req.body;
+
+    const newUser = await createUser({
+      name,
+      email: email.toLowerCase(),
+      password,
+    });
+
+    const { hashedVerificationCode, verificationCode } =
+      User.createVerificationCode();
+    newUser.verificationCode = hashedVerificationCode;
+    await newUser.save();
+
+    // Send Verification Email
+    const redirectUrl = `${config.get<string>(
+      'origin'
+    )}/verifyemail/${verificationCode}`;
+
     try {
-      const { name, password, email } = req.body;
-  
-      const user = await createUser({
-        name,
-        email: email.toLowerCase(),
-        password,
-      });
-  
+      await new Email(newUser, redirectUrl).sendVerificationCode();
+
       res.status(201).json({
         status: 'success',
-        data: {
-          user,
-        },
+        message:
+          'An email with a verification code has been sent to your email',
       });
-    } catch (err: any) {
-      if (err.code === '23505') {
-        // made up error code
-        return res.status(409).json({
-          status: 'fail',
-          message: 'User with that email already exist',
-        });
-      }
-      next(err);
+    } catch (error) {
+      newUser.verificationCode = null;
+      await newUser.save();
+
+      return res.status(500).json({
+        status: 'error',
+        message: 'There was an error sending email, please try again',
+      });
     }
+  } catch (err: any) {
+    if (err.code === '23505') {
+      return res.status(409).json({
+        status: 'fail',
+        message: 'User with that email already exist',
+      });
+    }
+    next(err);
+  }
 };
   
   
