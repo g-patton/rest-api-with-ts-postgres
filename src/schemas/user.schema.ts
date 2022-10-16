@@ -42,3 +42,11 @@ export type CreateUserInput = Omit<
 
 export type LoginUserInput = TypeOf<typeof loginUserSchema>['body'];
 
+export const verifyEmailSchema = object({
+  params: object({
+    verificationCode: string(),
+  }),
+});
+
+export type VerifyEmailInput = TypeOf<typeof verifyEmailSchema>['params'];
+
