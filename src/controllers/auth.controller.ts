@@ -1,8 +1,14 @@
 import { CookieOptions, NextFunction, Request, Response } from 'express';
 import config from 'config';
-import { CreateUserInput, LoginUserInput } from '../schemas/user.schema';
+import crypto from 'crypto';
+import {
+  CreateUserInput,
+  LoginUserInput,
+  VerifyEmailInput,
+} from '../schemas/user.schema';
 import {
   createUser,
+  findUser,
   findUserByEmail,
   findUserById,
   signTokens,
@@ -210,4 +216,34 @@ const logout = (res: Response) => {
     } catch (err: any) {
       next(err);
     }
+};
+
+export const verifyEmailHandler = async (
+  req: Request<VerifyEmailInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const verificationCode = crypto
+      .createHash('sha256')
+      .update(req.params.verificationCode)
+      .digest('hex');
+
+    const user = await findUser({ verificationCode });
+
+    if (!user) {
+      return next(new AppError(401, 'Could not verify email'));
+    }
+
+    user.verified = true;
+    user.verificationCode = null;
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Email verified successfully',
+    });
+  } catch (err: any) {
+    next(err);
+  }
 };
