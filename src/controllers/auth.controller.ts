@@ -19,30 +19,31 @@ import { signJwt, verifyJwt } from '../utils/jwt';
 import { User } from '../entities/user.entity';
 import Email from '../utils/email';
 
+export const excludedFields = ['password'];
+
 const cookiesOptions: CookieOptions = {
-    httpOnly: true,
-    sameSite: 'lax',
-  };
-  
-  if (process.env.NODE_ENV === 'production') cookiesOptions.secure = true;
-  
-  const accessTokenCookieOptions: CookieOptions = {
-    ...cookiesOptions,
-    expires: new Date(
-      Date.now() + config.get<number>('accessTokenExpiresIn') * 60 * 1000
-    ),
-    maxAge: config.get<number>('accessTokenExpiresIn') * 60 * 1000,
+  httpOnly: true,
+  sameSite: 'lax',
 };
-  
+
+if (process.env.NODE_ENV === 'production') cookiesOptions.secure = true;
+
+const accessTokenCookieOptions: CookieOptions = {
+  ...cookiesOptions,
+  expires: new Date(
+    Date.now() + config.get<number>('accessTokenExpiresIn') * 60 * 1000
+  ),
+  maxAge: config.get<number>('accessTokenExpiresIn') * 60 * 1000,
+};
+
 const refreshTokenCookieOptions: CookieOptions = {
-    ...cookiesOptions,
-    expires: new Date(
-      Date.now() + config.get<number>('refreshTokenExpiresIn') * 60 * 1000
-    ),
-    maxAge: config.get<number>('refreshTokenExpiresIn') * 60 * 1000,
+  ...cookiesOptions,
+  expires: new Date(
+    Date.now() + config.get<number>('refreshTokenExpiresIn') * 60 * 1000
+  ),
+  maxAge: config.get<number>('refreshTokenExpiresIn') * 60 * 1000,
 };
-  
-  
+
 export const registerUserHandler = async (
   req: Request<{}, {}, CreateUserInput>,
   res: Response,
@@ -94,8 +95,7 @@ export const registerUserHandler = async (
     next(err);
   }
 };
-  
-  
+
 export const loginUserHandler = async (
   req: Request<{}, {}, LoginUserInput>,
   res: Response,
@@ -110,9 +110,14 @@ export const loginUserHandler = async (
       return next(new AppError(400, 'Invalid email or password'));
     }
 
-    // 2. Check if the user is verified
+    // 2.Check if user is verified
     if (!user.verified) {
-      return next(new AppError(400, 'You are not verified'));
+      return next(
+        new AppError(
+          401,
+          'You are not verified, check your email to verify your account'
+        )
+      );
     }
 
     //3. Check if password is valid
@@ -140,7 +145,36 @@ export const loginUserHandler = async (
     next(err);
   }
 };
-  
+
+export const verifyEmailHandler = async (
+  req: Request<VerifyEmailInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const verificationCode = crypto
+      .createHash('sha256')
+      .update(req.params.verificationCode)
+      .digest('hex');
+
+    const user = await findUser({ verificationCode });
+
+    if (!user) {
+      return next(new AppError(401, 'Could not verify email'));
+    }
+
+    user.verified = true;
+    user.verificationCode = null;
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Email verified successfully',
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
 
 export const refreshAccessTokenHandler = async (
   req: Request,
@@ -202,56 +236,25 @@ export const refreshAccessTokenHandler = async (
   }
 };
 
-// no direct way to clear cookies, so send empty string cookie with max age-1
 const logout = (res: Response) => {
-    res.cookie('access_token', '', { maxAge: -1 });
-    res.cookie('refresh_token', '', { maxAge: -1 });
-    res.cookie('logged_in', '', { maxAge: -1 });
-  };
-  
-  export const logoutHandler = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const user = res.locals.user;
-  
-      await redisClient.del(user.id);
-      logout(res);
-  
-      res.status(200).json({
-        status: 'success',
-      });
-    } catch (err: any) {
-      next(err);
-    }
+  res.cookie('access_token', '', { maxAge: 1 });
+  res.cookie('refresh_token', '', { maxAge: 1 });
+  res.cookie('logged_in', '', { maxAge: 1 });
 };
 
-export const verifyEmailHandler = async (
-  req: Request<VerifyEmailInput>,
+export const logoutHandler = async (
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const verificationCode = crypto
-      .createHash('sha256')
-      .update(req.params.verificationCode)
-      .digest('hex');
+    const user = res.locals.user;
 
-    const user = await findUser({ verificationCode });
-
-    if (!user) {
-      return next(new AppError(401, 'Could not verify email'));
-    }
-
-    user.verified = true;
-    user.verificationCode = null;
-    await user.save();
+    await redisClient.del(user.id);
+    logout(res);
 
     res.status(200).json({
       status: 'success',
-      message: 'Email verified successfully',
     });
   } catch (err: any) {
     next(err);
