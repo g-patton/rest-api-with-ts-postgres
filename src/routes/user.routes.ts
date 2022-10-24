@@ -11,4 +11,3 @@ router.use(deserializeUser, requireUser);
 router.get('/me', getMeHandler);
 
 export default router;
-

@@ -28,10 +28,12 @@ router.get('/logout', deserializeUser, requireUser, logoutHandler);
 
 // Refresh access token
 router.get('/refresh', refreshAccessTokenHandler);
-//verify email
+
+// Verify Email Address
 router.get(
   '/verifyemail/:verificationCode',
   validate(verifyEmailSchema),
   verifyEmailHandler
 );
+
 export default router;

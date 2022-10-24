@@ -1,6 +1,5 @@
 import config from 'config';
-import { DeepPartial } from 'typeorm';
-// import { omit } from 'lodash';
+import { excludedFields } from '../controllers/auth.controller';
 import { User } from '../entities/user.entity';
 import { CreateUserInput } from '../schemas/user.schema';
 import redisClient from '../utils/connectRedis';
@@ -9,8 +8,10 @@ import { signJwt } from '../utils/jwt';
 
 const userRepository = AppDataSource.getRepository(User);
 
-export const createUser = async (input: Partial<User>) => {
-  return await userRepository.save(userRepository.create(input));
+export const createUser = async (input: CreateUserInput) => {
+  return (await AppDataSource.manager.save(
+    AppDataSource.manager.create(User, input)
+  )) as User;
 };
 
 export const findUserByEmail = async ({ email }: { email: string }) => {
