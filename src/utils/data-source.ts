@@ -1,7 +1,8 @@
-require('dotenv').config()
+require('dotenv').config();
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import config from 'config';
+import { User } from '../entities/user.entity';
 
 const postgresConfig = config.get<{
   host: string;
@@ -20,4 +21,3 @@ export const AppDataSource = new DataSource({
   migrations: ['src/migrations/**/*{.ts,.js}'],
   subscribers: ['src/subscribers/**/*{.ts,.js}'],
 });
-
