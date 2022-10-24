@@ -20,4 +20,3 @@ export const requireUser = (
     next(err);
   }
 };
-

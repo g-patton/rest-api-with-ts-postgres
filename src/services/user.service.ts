@@ -1,17 +1,14 @@
 import config from 'config';
-import { excludedFields } from '../controllers/auth.controller';
+// import { omit } from 'lodash';
 import { User } from '../entities/user.entity';
-import { CreateUserInput } from '../schemas/user.schema';
 import redisClient from '../utils/connectRedis';
 import { AppDataSource } from '../utils/data-source';
 import { signJwt } from '../utils/jwt';
 
 const userRepository = AppDataSource.getRepository(User);
 
-export const createUser = async (input: CreateUserInput) => {
-  return (await AppDataSource.manager.save(
-    AppDataSource.manager.create(User, input)
-  )) as User;
+export const createUser = async (input: Partial<User>) => {
+  return await userRepository.save(userRepository.create(input));
 };
 
 export const findUserByEmail = async ({ email }: { email: string }) => {

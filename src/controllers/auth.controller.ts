@@ -110,14 +110,9 @@ export const loginUserHandler = async (
       return next(new AppError(400, 'Invalid email or password'));
     }
 
-    // 2.Check if user is verified
+    // 2. Check if the user is verified
     if (!user.verified) {
-      return next(
-        new AppError(
-          401,
-          'You are not verified, check your email to verify your account'
-        )
-      );
+      return next(new AppError(400, 'You are not verified'));
     }
 
     //3. Check if password is valid
@@ -145,6 +140,7 @@ export const loginUserHandler = async (
     next(err);
   }
 };
+
 
 export const verifyEmailHandler = async (
   req: Request<VerifyEmailInput>,

@@ -49,7 +49,7 @@ export const deserializeUser = async (
       return next(new AppError(401, `Invalid token or session has expired`));
     }
 
-    // Add user to res.locals and make available for controllers
+    // Add user to res.locals
     res.locals.user = user;
 
     next();
@@ -57,4 +57,3 @@ export const deserializeUser = async (
     next(err);
   }
 };
-
