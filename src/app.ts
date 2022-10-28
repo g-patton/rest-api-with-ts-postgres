@@ -54,6 +54,7 @@ AppDataSource.initialize()
     app.use('/api/auth', authRouter);
     app.use('/api/users', userRouter);
     // app.use('/api/posts', postRouter);
+    //need to update postRouter
 
     // HEALTH CHECKER
     app.get('/api/healthChecker', async (_, res: Response) => {
