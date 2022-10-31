@@ -53,7 +53,7 @@ AppDataSource.initialize()
     // ROUTES
     app.use('/api/auth', authRouter);
     app.use('/api/users', userRouter);
-    // app.use('/api/posts', postRouter);
+    app.use('/api/posts', postRouter);
     
 
     // HEALTH CHECKER
