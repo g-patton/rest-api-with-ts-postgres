@@ -101,4 +101,5 @@ AppDataSource.initialize()
     // app.listen(port);
     // console.log(`Server started with pid: ${process.pid} on port: ${port}`);
   })
+  //error log below
   .catch((error) => console.log(error));
