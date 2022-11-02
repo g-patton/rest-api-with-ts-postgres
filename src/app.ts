@@ -56,7 +56,7 @@ AppDataSource.initialize()
     app.use('/api/posts', postRouter);
     
 
-    // HEALTH CHECKER
+    // HEALTH CHECKER to check that app backend is connecting
     app.get('/api/healthChecker', async (_, res: Response) => {
       // const message = await redisClient.get('try');
 
